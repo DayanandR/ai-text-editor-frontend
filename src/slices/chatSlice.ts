@@ -24,7 +24,7 @@ const chatSlice = createSlice({
   initialState,
   reducers: {
     // Send message
-    sendMessageRequest: (state, action: PayloadAction<string>) => {
+    sendMessageRequest: (state, _action: PayloadAction<string>) => {
       state.isProcessing = true;
       state.error = null;
     },
