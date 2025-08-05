@@ -1,0 +1,334 @@
+@import "tailwindcss";
+
+/* ============================================
+   CSS Variables for consistent theming
+   ============================================ */
+:root {
+  --ruler-bg: #f8f9fa;
+  --ruler-border: #dee2e6;
+  --ruler-text: #6c757d;
+  --mm-to-px: 3.7795275591; /* 96 DPI conversion */
+  --page-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  --page-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* ============================================
+   A4 Page Layout
+   ============================================ */
+.a4-page,
+.document-page {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto 20mm auto;
+  background: white;
+  box-shadow: var(--page-shadow);
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.document-page:hover {
+  box-shadow: var(--page-shadow-hover);
+}
+
+/* ============================================
+   Page Break Styles
+   ============================================ */
+hr[data-page-break],
+.page-break {
+  border: none;
+  margin: 20px 0;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    #ccc 0%,
+    #ccc 45%,
+    transparent 55%,
+    #ccc 100%
+  );
+  position: relative;
+  page-break-after: always;
+  break-after: always;
+}
+
+hr[data-page-break]::before,
+.page-break::before {
+  content: "Page Break";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 2px 8px;
+  font-size: 10px;
+  color: #666;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-family: system-ui, -apple-system, sans-serif;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+/* ============================================
+   Document Content Typography
+   ============================================ */
+.document-content {
+  font-family: "Georgia", "Times New Roman", serif;
+  line-height: 1.8;
+  font-size: 12pt;
+  color: #000;
+}
+
+.document-content h1 {
+  font-size: 16pt;
+  margin-bottom: 24pt;
+  text-align: center;
+  font-weight: bold;
+}
+
+.document-content h2 {
+  font-size: 14pt;
+  margin-top: 18pt;
+  margin-bottom: 12pt;
+  font-weight: bold;
+}
+
+.document-content h3 {
+  font-size: 13pt;
+  margin-top: 12pt;
+  margin-bottom: 6pt;
+  font-weight: bold;
+}
+
+.document-content p {
+  margin-bottom: 12pt;
+  text-align: justify;
+}
+
+.document-content ol,
+.document-content ul {
+  margin-bottom: 12pt;
+  padding-left: 20pt;
+}
+
+.document-content li {
+  margin-bottom: 6pt;
+}
+
+.document-content strong {
+  font-weight: bold;
+}
+
+.document-content em {
+  font-style: italic;
+}
+
+.document-content u {
+  text-decoration: underline;
+}
+
+/* ============================================
+   Ruler Styles
+   ============================================ */
+.ruler-horizontal,
+.ruler-vertical {
+  background: var(--ruler-bg);
+  border-color: var(--ruler-border);
+  user-select: none;
+  font-size: 8px;
+  color: var(--ruler-text);
+}
+
+.ruler-container {
+  scroll-behavior: smooth;
+}
+
+.page-view-container {
+  --ruler-bg: #f8f9fa;
+  --ruler-border: #dee2e6;
+  --ruler-text: #6c757d;
+}
+
+/* ============================================
+   Zoom and Animation Styles
+   ============================================ */
+.zoom-container {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   Custom Scrollbar
+   ============================================ */
+.document-area::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.document-area::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.document-area::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.document-area::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* ============================================
+   Focus Styles for Accessibility
+   ============================================ */
+.zoom-control:focus,
+.print-button:focus,
+button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+@page {
+  size: A4;
+  margin: 25mm 20mm;
+
+  @top-center {
+    content: element(page-header);
+  }
+
+  @bottom-center {
+    content: element(page-footer);
+  }
+}
+
+/* Header/Footer elements - hidden on screen */
+#page-header,
+#page-footer {
+  display: none;
+}
+
+@media print {
+  /* Show and position header/footer */
+  #page-header,
+  #page-footer {
+    display: block;
+  }
+
+  #page-header {
+    position: running(page-header);
+  }
+
+  #page-footer {
+    position: running(page-footer);
+  }
+
+  /* Hide page breaks visually but preserve functionality */
+  hr[data-page-break],
+  .page-break {
+    page-break-after: always;
+    break-after: always;
+    border: none !important;
+    background: none !important;
+    margin: 0 !important;
+    height: 0 !important;
+    visibility: hidden;
+  }
+
+  hr[data-page-break]::before,
+  .page-break::before {
+    display: none;
+  }
+
+  /* Hide UI elements during print */
+  .ruler-horizontal,
+  .ruler-vertical,
+  .zoom-controls,
+  .page-controls {
+    display: none !important;
+  }
+
+  /* Optimize page layout for print */
+  .document-page,
+  .a4-page {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    break-inside: avoid;
+  }
+
+  .page-view-container {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .page-content {
+    margin: 0;
+    box-shadow: none;
+  }
+
+  /* Ensure proper page numbering */
+  .page-number::before {
+    content: counter(page);
+  }
+
+  .total-pages::before {
+    content: counter(pages);
+  }
+
+  /* Remove backgrounds and shadows for clean print */
+  * {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+.ruler-mm {
+  --mm-to-px: var(--mm-to-px);
+}
+
+.page-shadow {
+  box-shadow: var(--page-shadow);
+}
+
+/* ============================================
+   Responsive Design Helpers
+   ============================================ */
+@media screen and (max-width: 768px) {
+  .a4-page,
+  .document-page {
+    margin: 0 10px 20mm 10px;
+    width: calc(100vw - 20px);
+    min-width: 210mm;
+  }
+}
+
+/* ============================================
+   Dark Mode Support (Optional)
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ruler-bg: #2d3748;
+    --ruler-border: #4a5568;
+    --ruler-text: #a0aec0;
+  }
+
+  .document-area::-webkit-scrollbar-track {
+    background: #2d3748;
+  }
+
+  .document-area::-webkit-scrollbar-thumb {
+    background: #4a5568;
+  }
+
+  .document-area::-webkit-scrollbar-thumb:hover {
+    background: #718096;
+  }
+}
