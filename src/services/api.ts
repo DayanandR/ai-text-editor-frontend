@@ -29,6 +29,8 @@ const request = async <T>(
     ...options,
   };
 
+  console.log("config", config);
+
   try {
     const response = await fetch(url, config);
 
