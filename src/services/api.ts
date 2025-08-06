@@ -21,7 +21,7 @@ const request = async <T>(
   });
 
   const config: RequestInit = {
-    credentials: "include", // This is the key for cookie-based auth
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...options.headers,

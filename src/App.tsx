@@ -2,20 +2,11 @@ import React from "react";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 import MainApp from "./components/MainApp";
-import { useAppDispatch } from "./store/hooks";
 import { useGetCurrentUserQuery } from "./store/api/authApi";
-import { getCurrentUserRequest } from "./slices/authSlice";
 import LoginPage from "./components/LoginPage";
 
-
 const App: React.FC = () => {
-  const dispatch = useAppDispatch();
   const { data: userData, isLoading, error } = useGetCurrentUserQuery();
-
-  // Fetch current user on app start
-  React.useEffect(() => {
-    dispatch(getCurrentUserRequest());
-  }, [dispatch]);
 
   if (isLoading) {
     return (
