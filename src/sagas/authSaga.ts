@@ -19,14 +19,11 @@ function* loginSaga(
   action: PayloadAction<{ email: string; password: string }>
 ) {
   try {
-    console.log("🔄 Login saga triggered with:", action.payload);
-
     const response: { user: any } = yield call(
       apiService.login,
       action.payload
     );
 
-    console.log("✅ Login saga success:", response);
     yield put(loginSuccess(response.user));
   } catch (error: any) {
     console.error("❌ Login saga error:", error);
@@ -38,15 +35,12 @@ function* registerSaga(
   action: PayloadAction<{ name: string; email: string; password: string }>
 ) {
   try {
-    console.log("🔄 Register saga triggered with:", action.payload);
-
     // This will now work without any 'this' issues
     const response: { user: any } = yield call(
       apiService.register,
       action.payload
     );
 
-    console.log("✅ Register saga success:", response);
     yield put(registerSuccess(response.user));
   } catch (error: any) {
     console.error("❌ Register saga error:", error);
@@ -59,7 +53,6 @@ function* logoutSaga() {
     yield call(apiService.logout);
     yield put(logoutSuccess());
   } catch (error: any) {
-    // Even if logout fails on server, clear local state
     yield put(logoutSuccess());
   }
 }

@@ -1,12 +1,18 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 import MainApp from "./components/MainApp";
 import { useGetCurrentUserQuery } from "./store/api/authApi";
 import LoginPage from "./components/LoginPage";
+import { useAppDispatch } from "./store/hooks";
+import { getCurrentUserRequest } from "./slices/authSlice";
 
 const App: React.FC = () => {
   const { data: userData, isLoading, error } = useGetCurrentUserQuery();
+  const dispatch = useAppDispatch();
+  useEffect(() => {
+    dispatch(getCurrentUserRequest());
+  }, []);
 
   if (isLoading) {
     return (

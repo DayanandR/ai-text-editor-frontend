@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://ai-document-editor-backend.onrender.com/api";
+const API_BASE_URL = "http://localhost:5000/api";
 
 export interface ApiResponse<T> {
   data?: T;
@@ -14,12 +14,6 @@ const request = async <T>(
 ): Promise<T> => {
   const url = `${API_BASE_URL}${endpoint}`;
 
-  console.log(`🌐 Making API request to: ${url}`, {
-    method: options.method || "GET",
-    headers: options.headers,
-    body: options.body,
-  });
-
   const config: RequestInit = {
     credentials: "include",
     headers: {
@@ -29,18 +23,13 @@ const request = async <T>(
     ...options,
   };
 
-  console.log("config", config);
-
   try {
     const response = await fetch(url, config);
-
-    console.log(`📡 API response status: ${response.status} for ${url}`);
 
     if (!response.ok) {
       const error = await response
         .json()
         .catch(() => ({ message: "Network error" }));
-      console.error("❌ API error response:", error);
 
       // Handle unauthorized errors gracefully
       if (response.status === 401) {
@@ -51,7 +40,6 @@ const request = async <T>(
     }
 
     const data = await response.json();
-    console.log("✅ API success response:", data);
     return data;
   } catch (error) {
     console.error("🔥 API request failed:", error);
@@ -83,6 +71,7 @@ export const apiService = {
   logout: async () => {
     return request<ApiResponse<void>>("/auth/logout", {
       method: "POST",
+      credentials: "include",
     });
   },
 
@@ -91,7 +80,7 @@ export const apiService = {
       return await request<ApiResponse<{ user: any }>>("/auth/me");
     } catch (error) {
       if (error instanceof Error && error.message === "UNAUTHORIZED") {
-        return null; // User is not authenticated
+        return null;
       }
       throw error;
     }

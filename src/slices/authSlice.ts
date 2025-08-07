@@ -97,7 +97,6 @@ const authSlice = createSlice({
       state.error = action.payload;
       state.isAuthenticated = false;
     },
-
     // Clear error
     clearError: (state) => {
       state.error = null;

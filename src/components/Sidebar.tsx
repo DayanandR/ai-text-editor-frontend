@@ -887,15 +887,13 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                     <div className="border-t border-gray-100 mt-2 pt-2">
                       <button
+                        // In Sidebar.tsx - Correct approach
                         onClick={() => {
                           setShowUserMenu(false);
                           if (
                             window.confirm("Are you sure you want to logout?")
                           ) {
-                            localStorage.clear();
-                            sessionStorage.clear();
                             dispatch(logoutRequest());
-                            window.location.reload();
                           }
                         }}
                         className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
@@ -1046,10 +1044,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                             if (
                               window.confirm("Are you sure you want to logout?")
                             ) {
-                              localStorage.clear();
-                              sessionStorage.clear();
                               dispatch(logoutRequest());
-                              window.location.reload();
                             }
                           }}
                           className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
