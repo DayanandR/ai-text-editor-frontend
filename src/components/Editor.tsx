@@ -18,6 +18,9 @@ import {
   PrinterIcon,
   MagnifyingGlassPlusIcon,
   MagnifyingGlassMinusIcon,
+  DocumentArrowDownIcon,
+  FolderOpenIcon,
+  DocumentTextIcon,
 } from "@heroicons/react/24/outline";
 import { geminiService } from "../services/gemini";
 import { PageBreak } from "./extensions/PageBreak";
@@ -136,6 +139,7 @@ const PageViewWithRulers: React.FC<{
   const [showHeaderFooterModal, setShowHeaderFooterModal] = useState(false);
   const [pageContents, setPageContents] = useState<string[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   const [pageMargins] = useState({
     top: 25.4, // 1 inch in mm
@@ -159,6 +163,201 @@ const PageViewWithRulers: React.FC<{
     },
     [zoom]
   );
+
+  // Save As functionality
+  const saveAsDocument = useCallback(() => {
+    const documentName = prompt("Enter document name to save as:")?.trim();
+    if (!documentName) return;
+
+    if (!editor) {
+      console.error("Editor not available");
+      return;
+    }
+
+    try {
+      const documentData = {
+        content: editor.getHTML(),
+        json: editor.getJSON(),
+        headerContent,
+        footerContent,
+        savedAt: new Date().toISOString(),
+      };
+
+      const jsonString = JSON.stringify(documentData);
+      localStorage.setItem(`document_${documentName}`, jsonString);
+      setLastSaved(new Date());
+      alert(`Document saved as "${documentName}"`);
+    } catch (error) {
+      console.error("Save failed:", error);
+    }
+  }, [editor, headerContent, footerContent]);
+
+  // Load Document functionality
+  const loadDocument = useCallback(() => {
+    const documentName = prompt("Enter document name to load:")?.trim();
+    if (!documentName) return;
+
+    const savedDoc = localStorage.getItem(`document_${documentName}`);
+    if (savedDoc && editor) {
+      try {
+        const docData = JSON.parse(savedDoc);
+        editor.commands.setContent(docData.content || "");
+        if (onHeaderChange) onHeaderChange(docData.headerContent || "");
+        if (onFooterChange) onFooterChange(docData.footerContent || "");
+        alert(`Document "${documentName}" loaded successfully.`);
+      } catch (error) {
+        alert("Failed to load document. File may be corrupted.");
+      }
+    } else {
+      alert("Document not found.");
+    }
+  }, [editor, onHeaderChange, onFooterChange]);
+
+  // Export functions
+  const exportToHTML = useCallback(() => {
+    if (!editor) return;
+
+    try {
+      const content = editor.getHTML();
+      const processedFooter = footerContent
+        .replace(/\{\{pageNumber\}\}/g, '<span class="page-number"></span>')
+        .replace(/\{\{totalPages\}\}/g, '<span class="total-pages"></span>');
+
+      const fullHTML = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Exported Document</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Georgia, serif; margin: 40px; line-height: 1.6; }
+        .header { text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
+        .footer { text-align: center; border-top: 1px solid #ccc; padding-top: 10px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    ${headerContent ? `<div class="header">${headerContent}</div>` : ""}
+    <div class="content">${content}</div>
+    ${footerContent ? `<div class="footer">${processedFooter}</div>` : ""}
+</body>
+</html>`;
+
+      const blob = new Blob([fullHTML], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `document_${new Date().getTime()}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export failed:", error);
+    }
+  }, [editor, headerContent, footerContent]);
+
+  const exportToJSON = useCallback(() => {
+    if (!editor) return;
+
+    const exportData = {
+      content: editor.getHTML(),
+      json: editor.getJSON(),
+      headerContent,
+      footerContent,
+      metadata: {
+        exportedAt: new Date().toISOString(),
+        zoom,
+        margins: pageMargins,
+      },
+    };
+
+    const jsonContent = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([jsonContent], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "document.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [editor, headerContent, footerContent, zoom, pageMargins]);
+
+  const exportToText = useCallback(() => {
+    if (!editor) return;
+
+    // Helper function to convert HTML to plain text
+    const htmlToText = (html: string): string => {
+      return html
+        .replace(
+          /<h([1-6])[^>]*>(.*?)<\/h[1-6]>/gi,
+          (_, _level, content) =>
+            `\n${content.toUpperCase()}\n${"=".repeat(content.length)}\n`
+        )
+        .replace(/<p[^>]*>/gi, "\n")
+        .replace(/<\/p>/gi, "\n")
+        .replace(/<br[^>]*>/gi, "\n")
+        .replace(/<li[^>]*>(.*?)<\/li>/gi, "• $1\n")
+        .replace(/<ul[^>]*>|<\/ul>/gi, "")
+        .replace(/<ol[^>]*>|<\/ol>/gi, "")
+        .replace(/<strong[^>]*>(.*?)<\/strong>/gi, "**$1**")
+        .replace(/<em[^>]*>(.*?)<\/em>/gi, "*$1*")
+        .replace(/<[^>]*>/g, "")
+        .replace(/\n\s*\n\s*\n/g, "\n\n")
+        .trim();
+    };
+
+    let textContent = "";
+
+    if (headerContent) {
+      const cleanHeaderContent = htmlToText(headerContent);
+      textContent += `HEADER:\n${cleanHeaderContent}\n\n`;
+    }
+
+    textContent += `CONTENT:\n${htmlToText(editor.getHTML())}\n\n`;
+
+    if (footerContent) {
+      const cleanFooterContent = htmlToText(
+        footerContent
+          .replace(/\{\{pageNumber\}\}/g, "[Page Number]")
+          .replace(/\{\{totalPages\}\}/g, "[Total Pages]")
+      );
+      textContent += `FOOTER:\n${cleanFooterContent}`;
+    }
+
+    const blob = new Blob([textContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "document.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [editor, headerContent, footerContent]);
+
+  // Auto-save functionality
+  useEffect(() => {
+    if (!editor) return;
+
+    const autoSaveTimer = setInterval(() => {
+      const documentData = {
+        content: editor.getHTML(),
+        json: editor.getJSON(),
+        headerContent,
+        footerContent,
+        savedAt: new Date().toISOString(),
+      };
+
+      try {
+        localStorage.setItem("document_autosave", JSON.stringify(documentData));
+        setLastSaved(new Date());
+      } catch (error) {
+        console.warn("Auto-save failed:", error);
+      }
+    }, 30000); // Auto-save every 30 seconds
+
+    return () => clearInterval(autoSaveTimer);
+  }, [editor, headerContent, footerContent]);
 
   useEffect(() => {
     if (!editor) return;
@@ -271,8 +470,6 @@ const PageViewWithRulers: React.FC<{
     if (!printWindow) return;
 
     const content = editor.getHTML();
-
-    // Process footer content to include page numbers
     const processedFooter = footerContent
       .replace(/\{\{pageNumber\}\}/g, '<span class="page-number"></span>')
       .replace(/\{\{totalPages\}\}/g, '<span class="total-pages"></span>');
@@ -288,16 +485,6 @@ const PageViewWithRulers: React.FC<{
               margin: ${pageMargins.top + 15}mm ${pageMargins.right}mm ${
       pageMargins.bottom + 15
     }mm ${pageMargins.left}mm;
-              
-              @top-center {
-                content: element(page-header);
-                margin-bottom: 10mm;
-              }
-              
-              @bottom-center {
-                content: element(page-footer);
-                margin-top: 10mm;
-              }
             }
             
             body {
@@ -325,78 +512,12 @@ const PageViewWithRulers: React.FC<{
               margin-bottom: 0;
             }
             
-            .page-header {
-              position: running(page-header);
-            }
-            
-            .page-footer {
-              position: running(page-footer);
-            }
-            
             .document-content {
               max-width: none;
               margin: 0;
               padding: 0;
             }
             
-            .document-content h1 {
-              font-size: 16pt;
-              margin-bottom: 24pt;
-              text-align: center;
-              font-weight: bold;
-            }
-            
-            .document-content h2 {
-              font-size: 14pt;
-              margin-top: 18pt;
-              margin-bottom: 12pt;
-              font-weight: bold;
-            }
-            
-            .document-content h3 {
-              font-size: 13pt;
-              margin-top: 12pt;
-              margin-bottom: 6pt;
-              font-weight: bold;
-            }
-            
-            .document-content p {
-              margin-bottom: 12pt;
-              text-align: justify;
-            }
-            
-            .document-content ol, .document-content ul {
-              margin-bottom: 12pt;
-              padding-left: 20pt;
-            }
-            
-            .document-content li {
-              margin-bottom: 6pt;
-            }
-            
-            .document-content strong {
-              font-weight: bold;
-            }
-            
-            .document-content em {
-              font-style: italic;
-            }
-            
-            .document-content u {
-              text-decoration: underline;
-            }
-            
-            /* Page breaks */
-            hr[data-page-break], .page-break {
-              page-break-after: always;
-              break-after: always;
-              border: none;
-              margin: 0;
-              height: 0;
-              visibility: hidden;
-            }
-            
-            /* Page numbers */
             .page-number::before {
               content: counter(page);
             }
@@ -405,7 +526,6 @@ const PageViewWithRulers: React.FC<{
               content: counter(pages);
             }
             
-            /* Remove any shadows or backgrounds for print */
             * {
               background: transparent !important;
               box-shadow: none !important;
@@ -423,10 +543,7 @@ const PageViewWithRulers: React.FC<{
               ? `<div class="page-footer">${processedFooter}</div>`
               : ""
           }
-          
-          <div class="document-content">
-            ${content}
-          </div>
+          <div class="document-content">${content}</div>
         </body>
       </html>
     `);
@@ -449,6 +566,14 @@ const PageViewWithRulers: React.FC<{
             e.preventDefault();
             handlePrint();
             break;
+          case "s":
+            e.preventDefault();
+            saveAsDocument();
+            break;
+          case "o":
+            e.preventDefault();
+            loadDocument();
+            break;
           case "=":
           case "+":
             e.preventDefault();
@@ -468,7 +593,7 @@ const PageViewWithRulers: React.FC<{
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [handlePrint, handleZoomIn, handleZoomOut]);
+  }, [handlePrint, handleZoomIn, handleZoomOut, saveAsDocument, loadDocument]);
 
   // Generate ruler marks
   const generateHorizontalMarks = () => {
@@ -631,6 +756,56 @@ const PageViewWithRulers: React.FC<{
             <span className="text-sm">Header & Footer</span>
           </button>
 
+          {/* Save As Button */}
+          <button
+            onClick={saveAsDocument}
+            className="flex items-center space-x-2 px-3 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors"
+            title="Save As Document (Ctrl+S)"
+          >
+            <DocumentTextIcon className="w-4 h-4" />
+            <span className="text-sm">Save As</span>
+          </button>
+
+          {/* Load Document Button */}
+          <button
+            onClick={loadDocument}
+            className="flex items-center space-x-2 px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+            title="Load Document (Ctrl+O)"
+          >
+            <FolderOpenIcon className="w-4 h-4" />
+            <span className="text-sm">Load</span>
+          </button>
+
+          {/* Export Controls */}
+          <div className="flex items-center space-x-2 border-l border-gray-300 pl-4">
+            <button
+              onClick={exportToHTML}
+              className="flex items-center space-x-2 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+              title="Export as HTML"
+            >
+              <DocumentArrowDownIcon className="w-4 h-4" />
+              <span className="text-sm">HTML</span>
+            </button>
+
+            <button
+              onClick={exportToJSON}
+              className="flex items-center space-x-2 px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
+              title="Export as JSON"
+            >
+              <DocumentArrowDownIcon className="w-4 h-4" />
+              <span className="text-sm">JSON</span>
+            </button>
+
+            <button
+              onClick={exportToText}
+              className="flex items-center space-x-2 px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+              title="Export as Text"
+            >
+              <DocumentArrowDownIcon className="w-4 h-4" />
+              <span className="text-sm">TXT</span>
+            </button>
+          </div>
+
           {/* Print Button */}
           <button
             onClick={handlePrint}
@@ -643,6 +818,7 @@ const PageViewWithRulers: React.FC<{
         </div>
 
         <div className="flex items-center space-x-4 text-xs text-gray-500">
+          {lastSaved && <div>Last saved: {lastSaved.toLocaleTimeString()}</div>}
           <div>
             Page {currentPageIndex + 1} of {Math.max(1, pageContents.length)} •
             A4 (210 × 297 mm)

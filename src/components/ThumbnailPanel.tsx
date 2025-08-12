@@ -11,22 +11,22 @@ interface ThumbnailPanelProps {
   setActiveTab: React.Dispatch<
     React.SetStateAction<"thumbnail" | "index" | "search">
   >;
-  pages?: Page[]; // Dynamic pages data
-  currentPage?: number; // Currently active page
-  onPageSelect?: (pageNumber: number) => void; // Page selection callback
+  pages?: Page[];
+  currentPage?: number;
+  onPageSelect?: (pageNumber: number) => void;
   searchResults?: Array<{
     id: string;
     text: string;
     pageNumber: number;
     context: string;
-  }>; // Search results
-  onSearch?: (query: string) => void; // Search callback
+  }>;
+  onSearch?: (query: string) => void;
   tableOfContents?: Array<{
     id: string;
     title: string;
     level: number;
     pageNumber: number;
-  }>; // Dynamic table of contents
+  }>;
 }
 
 const ThumbnailPanel: React.FC<ThumbnailPanelProps> = ({
@@ -155,7 +155,6 @@ const ThumbnailPanel: React.FC<ThumbnailPanelProps> = ({
                       <div className="w-full h-full bg-white border border-gray-100 rounded flex flex-col overflow-hidden">
                         {/* Document preview content */}
                         <div className="p-2 text-xs text-gray-600 space-y-1 flex-1">
-                          {/* Show actual page header if it exists */}
                           <div className="font-semibold mb-1 text-[10px] truncate">
                             {page.content.includes("<h1>")
                               ? (() => {

@@ -121,7 +121,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
         </div>
 
-        {/* Font Size Dropdown - Fixed */}
         <div className="relative">
           <select
             value={fontSize}

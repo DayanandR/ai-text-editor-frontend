@@ -1,6 +1,5 @@
 import { useAppSelector } from "../hooks";
 
-// Mock the RTK Query hook for compatibility
 export const useGetCurrentUserQuery = () => {
   const { user, loading, error } = useAppSelector((state) => state.auth);
 

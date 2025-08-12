@@ -6,8 +6,6 @@ export function paginate(
   let page = document.createDocumentFragment();
   let workingHeight = 0;
 
-  console.log("Starting pagination with max height:", maxHeightPx); // Debug
-
   Array.from(element.childNodes).forEach((node, nodeIndex) => {
     const clone = node.cloneNode(true) as HTMLElement;
 
@@ -23,14 +21,13 @@ export function paginate(
       clone.innerHTML?.includes("data-page-break");
 
     if (isPageBreak) {
-      console.log(`Found page break at node ${nodeIndex}, creating new page`); // Debug
       // Finish current page
       if (page.childNodes.length > 0) {
         pages.push(page);
       }
       page = document.createDocumentFragment();
       workingHeight = 0;
-      return; // Don't include the HR itself in any page
+      return;
     }
 
     // Create probe to measure height
@@ -53,7 +50,7 @@ export function paginate(
         `Auto page break at node ${nodeIndex}, height: ${
           workingHeight + nodeHeight
         }px > ${maxHeightPx}px`
-      ); // Debug
+      );
       pages.push(page);
       page = document.createDocumentFragment();
       workingHeight = 0;
@@ -77,7 +74,6 @@ export function paginate(
     pages.push(emptyPage);
   }
 
-  console.log(`Created ${pages.length} pages total`); // Debug
   return pages;
 }
 

@@ -8,14 +8,12 @@ if (!API_KEY) {
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || "");
 
-// Legal document analysis prompts
 const LEGAL_SYSTEM_PROMPT = `You are a legal AI assistant specializing in document analysis. 
 Provide clear, accurate, and helpful responses about legal documents. 
 Focus on key legal points, precedents, risks, and explanations of legal terms.
 Keep responses concise but comprehensive.`;
 
 export const geminiService = {
-  // Basic chat with document context
   async chat(message: string, documentContext?: string): Promise<string> {
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -41,7 +39,6 @@ User Question: ${message}`;
     }
   },
 
-  // Enhanced chat with document - specifically for chat modal
   async chatWithDocument(
     message: string,
     documentContent: string

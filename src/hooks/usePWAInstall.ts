@@ -1,4 +1,3 @@
-// Update your usePWAInstall hook with debugging
 import { useState, useEffect } from "react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -16,9 +15,6 @@ export const usePWAInstall = () => {
   const [showInstallButton, setShowInstallButton] = useState(false);
 
   useEffect(() => {
-    // Add debugging
-    console.log("PWA Install hook initialized");
-
     // Check if already installed
     if (
       window.matchMedia &&
@@ -46,12 +42,6 @@ export const usePWAInstall = () => {
       handleBeforeInstallPrompt as EventListener
     );
     window.addEventListener("appinstalled", handleAppInstalled);
-
-    // Force show for testing (remove this in production)
-    // setTimeout(() => {
-    //   console.log('Force showing install button for testing');
-    //   setShowInstallButton(true);
-    // }, 2000);
 
     return () => {
       window.removeEventListener(

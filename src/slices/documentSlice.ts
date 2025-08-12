@@ -32,7 +32,6 @@ const documentSlice = createSlice({
   name: "documents",
   initialState,
   reducers: {
-    // Fetch documents
     fetchDocumentsRequest: (state) => {
       state.loading = true;
       state.error = null;
@@ -49,7 +48,6 @@ const documentSlice = createSlice({
       state.error = action.payload;
     },
 
-    // Create document - Fixed to accept parameters
     createDocumentRequest: (
       state,
       _action: PayloadAction<{ title: string; content?: string }>
@@ -67,7 +65,6 @@ const documentSlice = createSlice({
       state.error = action.payload;
     },
 
-    // Update document - Fixed to accept parameters
     updateDocumentRequest: (
       state,
       _action: PayloadAction<{ id: string; updates: Partial<Document> }>
@@ -90,7 +87,6 @@ const documentSlice = createSlice({
       state.error = action.payload;
     },
 
-    // Delete document - Fixed to accept parameters
     deleteDocumentRequest: (state, _action: PayloadAction<string>) => {
       state.loading = true;
       state.error = null;
@@ -110,12 +106,10 @@ const documentSlice = createSlice({
       state.error = action.payload;
     },
 
-    // Set active document
     setActiveDocument: (state, action: PayloadAction<string>) => {
       state.activeDocumentId = action.payload;
     },
 
-    // Auto-save document (optimistic update)
     autoSaveDocument: (
       state,
       action: PayloadAction<{
@@ -136,12 +130,10 @@ const documentSlice = createSlice({
       }
     },
 
-    // Clear error
     clearError: (state) => {
       state.error = null;
     },
 
-    // Manual save document (mark as saved)
     saveDocumentSuccess: (state, action: PayloadAction<string>) => {
       const document = state.documents.find((doc) => doc.id === action.payload);
       if (document) {
@@ -150,7 +142,6 @@ const documentSlice = createSlice({
       }
     },
 
-    // Logout/Clear state
     logoutRequest: (state) => {
       state.documents = [];
       state.activeDocumentId = "";

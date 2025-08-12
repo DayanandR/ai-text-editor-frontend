@@ -46,7 +46,6 @@ const uiSlice = createSlice({
     },
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
-      // Simple search logic - in a real app, this would be in a saga
       state.searchResults = action.payload
         ? [
             { text: "Sample search result", page: 1 },

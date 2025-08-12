@@ -3,6 +3,7 @@ import {
   DocumentTextIcon,
   BookmarkIcon,
   EllipsisHorizontalIcon,
+  DocumentArrowDownIcon,
 } from "@heroicons/react/24/outline";
 
 interface HeaderBarProps {
@@ -20,6 +21,7 @@ interface HeaderBarProps {
   onAddBookmark: (title: string, page: number) => void;
   currentPage: number;
   totalPages: number;
+  onShowExportModal: () => void;
 }
 
 const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -29,6 +31,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   onSave,
   onAddBookmark,
   currentPage,
+  onShowExportModal,
 }) => {
   const [showSaveToast, setShowSaveToast] = useState(false);
   const [saveButtonFlash, setSaveButtonFlash] = useState(false);
@@ -293,6 +296,14 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
                 Save
               </span>
             )}
+          </button>
+          <button
+            onClick={onShowExportModal}
+            className="flex items-center space-x-2 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+            title="Save & Export Options (Ctrl+E)"
+          >
+            <DocumentArrowDownIcon className="w-4 h-4" />
+            <span className="text-sm">Export</span>
           </button>
 
           <div className="relative">

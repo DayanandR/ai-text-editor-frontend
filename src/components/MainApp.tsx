@@ -1,5 +1,3 @@
-/* MainApp.tsx – Fixed version with all TypeScript errors resolved */
-
 import React, { useCallback, useEffect, useState } from "react";
 import { Editor as TiptapEditor } from "@tiptap/react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -21,6 +19,7 @@ import {
 } from "../slices/documentSlice";
 import { setActiveTab, setSearchQuery, toggleSidebar } from "../slices/uiSlice";
 import { sendMessageRequest } from "../slices/chatSlice";
+import { ExportModal } from "./ExportModal";
 
 interface MainAppProps {
   user: { id: string; name: string; email: string };
@@ -29,7 +28,6 @@ interface MainAppProps {
 const MainApp: React.FC<MainAppProps> = ({ user }) => {
   const dispatch = useAppDispatch();
 
-  /* ─── Redux state ───────────────────────────────────────────── */
   const { documents, activeDocumentId, loading, error } = useAppSelector(
     (s) => s.documents
   );
@@ -38,7 +36,6 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
   );
   const { messages, isProcessing } = useAppSelector((s) => s.chat);
 
-  /* ─── Local state ───────────────────────────────────────────── */
   const [editor, setEditor] = useState<TiptapEditor | null>(null);
   const [chatInput, setChatInput] = useState("");
   const [bookmarks, setBookmarks] = useState<
@@ -47,7 +44,6 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
   const [showSaveToast, setShowSaveToast] = useState(false);
   const [showErrorToast, setShowErrorToast] = useState<string | null>(null);
 
-  /* Page / TOC state */
   const [pages, setPages] = useState<
     { id: number; content: string; pageNumber: number }[]
   >([]);
@@ -59,7 +55,6 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
     { id: string; text: string; pageNumber: number; context: string }[]
   >([]);
 
-  /* Header / footer HTML templates */
   const [headerContent, setHeaderContent] = useState(
     '<p style="text-align:center;"><strong>CONFIDENTIAL LEGAL DOCUMENT</strong></p>'
   );
@@ -69,7 +64,6 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
 
   const activeDocument = documents.find((d) => d.id === activeDocumentId);
 
-  /* ─── Error handling ────────────────────────────────────────── */
   useEffect(() => {
     if (error) {
       setShowErrorToast(error);
@@ -77,7 +71,6 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
     }
   }, [error]);
 
-  /* ─── Manual save function ──────────────────────────────────── */
   const handleSave = useCallback(() => {
     if (!activeDocumentId || !activeDocument || activeDocument.saved) return;
 
@@ -103,7 +96,6 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
     console.log("Document saved:", activeDocumentId);
   }, [dispatch, activeDocumentId, activeDocument]);
 
-  /* ─── Ctrl+S Global Handler ─────────────────────────────────── */
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key === "s") {
@@ -116,10 +108,9 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleSave]);
 
-  /* ─── Create document handler ───────────────────────────────── */
+  // Create document handler
   const handleCreateDocument = useCallback(
     (title: string, content: string) => {
-      // Dispatch with proper payload
       dispatch(
         createDocumentRequest({
           title,
@@ -130,7 +121,7 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
     [dispatch]
   );
 
-  /* ─── Update document handlers ──────────────────────────────── */
+  // Update document handlers
   const handleTitleChange = useCallback(
     (title: string) => {
       if (!activeDocumentId) return;
@@ -145,23 +136,23 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
     [dispatch, activeDocumentId]
   );
 
-  /* ─── Delete document handler ───────────────────────────────── */
+  // Delete document handler
   const handleDeleteDocument = useCallback(() => {
     if (!activeDocumentId) return;
 
     dispatch(deleteDocumentRequest(activeDocumentId));
   }, [dispatch, activeDocumentId]);
 
-  /* ─── Fetch documents once ──────────────────────────────────── */
+  //Fetch documents once
   useEffect(() => {
     dispatch(fetchDocumentsRequest());
   }, [dispatch]);
 
-  /* ─── Editor-related effect: runs ONCE per editor instance ──── */
+  //Editor-related effect: runs ONCE per editor instance
   useEffect(() => {
     if (!editor) return;
 
-    /* Helpers local to this effect → never invalidate the effect */
+    // Helpers local to this effect → never invalidate the effect
     const buildPages = (): typeof pages => {
       const html = editor.getHTML();
       const parts = html
@@ -207,7 +198,7 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
         if (n.type.name === "pageBreak") breaks += 1;
         return true;
       });
-      return breaks + 1; // 1-based
+      return breaks + 1;
     };
 
     /* Refresh content */
@@ -239,7 +230,7 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
     };
   }, [editor]);
 
-  /* ─── Navigation helper ─────────────────────────────────────── */
+  /* ─── Navigation helper */
   const goToPage = useCallback(
     (pageNum: number) => {
       if (!editor) return;
@@ -272,7 +263,7 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
     [editor]
   );
 
-  /* ─── Client-side document search ───────────────────────────── */
+  // Client-side document search
   const handleDocSearch = useCallback(
     (q: string) => {
       if (!q.trim()) return setDocSearch([]);
@@ -298,7 +289,7 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
     [pages]
   );
 
-  /* ─── Auto-save on editor change ────────────────────────────── */
+  // Auto-save on editor change
   const saveDraft = useCallback(
     (html: string) => {
       if (!activeDocumentId) return;
@@ -315,7 +306,7 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
     [dispatch, activeDocumentId]
   );
 
-  /* ─── Bookmark helpers ──────────────────────────────────────── */
+  // Bookmark helpers
   const addBookmark = useCallback(
     (title: string, page: number) =>
       setBookmarks((b) => [
@@ -330,12 +321,282 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
     [activeDocumentId]
   );
 
+  const saveAsDocument = useCallback(() => {
+    if (!activeDocument || !editor) return;
+
+    const documentName = prompt("Enter document name to save as:")?.trim();
+    if (!documentName) return;
+
+    try {
+      const documentData = {
+        title: documentName,
+        content: editor.getHTML(),
+        headerContent,
+        footerContent,
+        savedAt: new Date().toISOString(),
+        metadata: {
+          pageCount: pages.length,
+          wordCount: activeDocument.wordCount,
+          characterCount: activeDocument.characterCount,
+        },
+      };
+
+      // Save to localStorage for local backup
+      localStorage.setItem(
+        `document_${documentName}`,
+        JSON.stringify(documentData)
+      );
+
+      // Create new document in Redux store
+      dispatch(
+        createDocumentRequest({
+          title: documentName,
+          content: editor.getHTML(),
+        })
+      );
+
+      setShowSaveToast(true);
+      setTimeout(() => setShowSaveToast(false), 2000);
+    } catch (error) {
+      setShowErrorToast("Failed to save document");
+    }
+  }, [
+    activeDocument,
+    editor,
+    headerContent,
+    footerContent,
+    pages.length,
+    dispatch,
+  ]);
+
+  const exportToHTML = useCallback(() => {
+    if (!activeDocument || !editor) return;
+
+    const content = editor.getHTML();
+    const processedFooter = footerContent
+      .replace(/\{\{pageNumber\}\}/g, '<span class="page-number"></span>')
+      .replace(/\{\{totalPages\}\}/g, '<span class="total-pages"></span>');
+
+    const fullHTML = `<!DOCTYPE html>
+<html>
+<head>
+    <title>${activeDocument.title}</title>
+    <meta charset="utf-8">
+    <style>
+        @page { size: A4; margin: 1in; }
+        body { font-family: Georgia, serif; line-height: 1.6; color: #000; }
+        .header { text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
+        .footer { text-align: center; border-top: 1px solid #ccc; padding-top: 10px; margin-top: 20px; }
+        .page-number::before { content: counter(page); }
+        .total-pages::before { content: counter(pages); }
+        h1 { font-size: 18pt; }
+        h2 { font-size: 16pt; }
+        h3 { font-size: 14pt; }
+        p { margin-bottom: 12pt; }
+    </style>
+</head>
+<body>
+    ${headerContent ? `<div class="header">${headerContent}</div>` : ""}
+    <div class="content">${content}</div>
+    ${footerContent ? `<div class="footer">${processedFooter}</div>` : ""}
+</body>
+</html>`;
+
+    const blob = new Blob([fullHTML], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${activeDocument.title}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [activeDocument, editor, headerContent, footerContent]);
+
+  const exportToJSON = useCallback(() => {
+    if (!activeDocument || !editor) return;
+
+    const exportData = {
+      document: {
+        title: activeDocument.title,
+        content: editor.getHTML(),
+        json: editor.getJSON(),
+      },
+      header: headerContent,
+      footer: footerContent,
+      metadata: {
+        exportedAt: new Date().toISOString(),
+        pageCount: pages.length,
+        wordCount: activeDocument.wordCount,
+        characterCount: activeDocument.characterCount,
+        tableOfContents: tableOfContents,
+      },
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: "application/json;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${activeDocument.title}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [
+    activeDocument,
+    editor,
+    headerContent,
+    footerContent,
+    pages.length,
+    tableOfContents,
+  ]);
+
+  const exportToText = useCallback(() => {
+    if (!activeDocument || !editor) return;
+
+    const htmlToText = (html: string): string => {
+      return html
+        .replace(/<h([1-6])[^>]*>(.*?)<\/h[1-6]>/gi, (_, _level, content) => {
+          const underline = "=".repeat(content.length);
+          return `\n${content.toUpperCase()}\n${underline}\n`;
+        })
+        .replace(/<p[^>]*>/gi, "\n")
+        .replace(/<\/p>/gi, "\n")
+        .replace(/<br[^>]*>/gi, "\n")
+        .replace(/<li[^>]*>(.*?)<\/li>/gi, "• $1\n")
+        .replace(/<ul[^>]*>|<\/ul>/gi, "")
+        .replace(/<ol[^>]*>|<\/ol>/gi, "")
+        .replace(/<strong[^>]*>(.*?)<\/strong>/gi, "**$1**")
+        .replace(/<em[^>]*>(.*?)<\/em>/gi, "*$1*")
+        .replace(/<[^>]*>/g, "")
+        .replace(/\n\s*\n\s*\n/g, "\n\n")
+        .trim();
+    };
+
+    let textContent = "";
+
+    if (headerContent) {
+      textContent += `HEADER:\n${htmlToText(headerContent)}\n\n`;
+    }
+
+    textContent += `${activeDocument.title.toUpperCase()}\n${"=".repeat(
+      activeDocument.title.length
+    )}\n\n`;
+    textContent += htmlToText(editor.getHTML());
+
+    if (footerContent) {
+      const cleanFooter = htmlToText(
+        footerContent
+          .replace(/\{\{pageNumber\}\}/g, "[Page Number]")
+          .replace(/\{\{totalPages\}\}/g, "[Total Pages]")
+      );
+      textContent += `\n\nFOOTER:\n${cleanFooter}`;
+    }
+
+    const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${activeDocument.title}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [activeDocument, editor, headerContent, footerContent]);
+
+  const exportToPDF = useCallback(() => {
+    if (!activeDocument || !editor) return;
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const content = editor.getHTML();
+    const processedFooter = footerContent
+      .replace(/\{\{pageNumber\}\}/g, '<span class="page-number"></span>')
+      .replace(/\{\{totalPages\}\}/g, '<span class="total-pages"></span>');
+
+    printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>${activeDocument.title}</title>
+        <style>
+          @page {
+            size: A4;
+            margin: 25mm;
+            @top-center { content: element(page-header); }
+            @bottom-center { content: element(page-footer); }
+          }
+          body { font-family: Georgia, serif; font-size: 12pt; line-height: 1.6; margin: 0; color: #000; }
+          .page-header { position: running(page-header); text-align: center; font-size: 10pt; border-bottom: 1px solid #ccc; padding-bottom: 5mm; }
+          .page-footer { position: running(page-footer); text-align: center; font-size: 10pt; border-top: 1px solid #ccc; padding-top: 5mm; }
+          .page-number::before { content: counter(page); }
+          .total-pages::before { content: counter(pages); }
+          h1 { font-size: 16pt; margin-bottom: 24pt; }
+          h2 { font-size: 14pt; margin-top: 18pt; margin-bottom: 12pt; }
+          p { margin-bottom: 12pt; text-align: justify; }
+          * { background: transparent !important; box-shadow: none !important; }
+        </style>
+      </head>
+      <body>
+        ${
+          headerContent ? `<div class="page-header">${headerContent}</div>` : ""
+        }
+        ${
+          footerContent
+            ? `<div class="page-footer">${processedFooter}</div>`
+            : ""
+        }
+        <div class="document-content">${content}</div>
+      </body>
+    </html>
+  `);
+
+    printWindow.document.close();
+    printWindow.focus();
+
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
+  }, [activeDocument, editor, headerContent, footerContent]);
+
+  // Add this state
+  const [showExportModal, setShowExportModal] = useState(false);
+
+  // Update your keyboard shortcuts useEffect
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        switch (event.key) {
+          case "s":
+            event.preventDefault();
+            if (event.shiftKey) {
+              setShowExportModal(true); // Ctrl+Shift+S for export modal
+            } else {
+              handleSave();
+            }
+            break;
+          case "e":
+            event.preventDefault();
+            setShowExportModal(true); // Ctrl+E for export modal
+            break;
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleSave]);
+
   const removeBookmark = useCallback(
     (id: string) => setBookmarks((b) => b.filter((bk) => bk.id !== id)),
     []
   );
 
-  /* ─── Quick early returns (loading / empty) ─────────────────── */
+  // Quick early returns (loading / empty)
   if (loading && !documents.length) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
@@ -374,15 +635,14 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
     );
   }
 
-  // ✅ At this point, activeDocument is guaranteed to exist
   if (!activeDocument) {
-    return null; // This should never happen but keeps TypeScript happy
+    return null;
   }
 
   // Create a non-nullable alias for cleaner code
   const currentDoc = activeDocument;
 
-  /* ─── Render ────────────────────────────────────────────────── */
+  // Render
   return (
     <>
       {/* Global Save Toast Notification */}
@@ -423,7 +683,6 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
         </div>
       )}
 
-      {/* Add keyframes for toast animation */}
       <style>
         {`
           @keyframes slideIn {
@@ -479,12 +738,22 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
             onTitleChange={handleTitleChange}
             onSave={handleSave}
             onDelete={handleDeleteDocument}
+            onShowExportModal={() => setShowExportModal(true)}
             bookmarks={bookmarks}
             onAddBookmark={addBookmark}
             currentPage={currentPage}
             totalPages={pages.length}
           />
-
+          <ExportModal
+            isOpen={showExportModal}
+            onClose={() => setShowExportModal(false)}
+            onSaveAs={saveAsDocument}
+            onExportHTML={exportToHTML}
+            onExportJSON={exportToJSON}
+            onExportText={exportToText}
+            onExportPDF={exportToPDF}
+            documentTitle={currentDoc.title}
+          />
           <Toolbar
             editor={editor}
             activeTab={activeTab}

@@ -31,7 +31,6 @@ const request = async <T>(
         .json()
         .catch(() => ({ message: "Network error" }));
 
-      // Handle unauthorized errors gracefully
       if (response.status === 401) {
         throw new Error("UNAUTHORIZED");
       }
@@ -47,9 +46,7 @@ const request = async <T>(
   }
 };
 
-// Export an object with all API methods
 export const apiService = {
-  // Auth API
   login: async (credentials: { email: string; password: string }) => {
     return request<ApiResponse<{ user: any }>>("/auth/login", {
       method: "POST",
